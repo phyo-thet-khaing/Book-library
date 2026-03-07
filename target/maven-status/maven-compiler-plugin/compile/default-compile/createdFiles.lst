@@ -1,0 +1,5 @@
+com\ptk\demo\service\BookService.class
+com\ptk\demo\controller\BookController.class
+com\ptk\demo\BookLibraryApplication.class
+com\ptk\demo\model\Book.class
+com\ptk\demo\repository\BookRepository.class

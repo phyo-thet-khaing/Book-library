@@ -1,0 +1,4 @@
+com\ptk\demo\acceptance\CucumberBookConfiguration.class
+com\ptk\demo\BookLibraryApplicationTests.class
+com\ptk\demo\acceptance\LibrarySteps.class
+com\ptk\demo\acceptance\CucumberTest.class
