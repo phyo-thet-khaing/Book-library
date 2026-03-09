@@ -18,7 +18,7 @@ public class LibrarySteps
 {
 	
 	
-	 private Book book;
+	 	private Book book;
 	    private Book retrievedBook;
 
 	    // In-memory storage for BDD test
