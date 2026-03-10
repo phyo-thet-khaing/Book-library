@@ -1,5 +1,9 @@
+com\ptk\demo\dto\request\BookRequest.class
+com\ptk\demo\dto\response\BookResponse.class
+com\ptk\demo\mapper\BookMapper.class
+com\ptk\demo\model\Book.class
 com\ptk\demo\service\BookService.class
 com\ptk\demo\controller\BookController.class
 com\ptk\demo\BookLibraryApplication.class
-com\ptk\demo\model\Book.class
+com\ptk\demo\service\impl\BookServiceImpl.class
 com\ptk\demo\repository\BookRepository.class
