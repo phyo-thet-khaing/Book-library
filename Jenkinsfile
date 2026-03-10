@@ -88,7 +88,7 @@ pipeline {
         // ✅ Added Acceptance Test Stage
         stage('Acceptance Test') {
             steps {
-                sh 'mvn test -Dcucumber.options="classpath:features/book_library.feature"'
+                sh 'mvn test -Dcucumber.options="classpath:features/library.feature"'
             }
         }
     }
