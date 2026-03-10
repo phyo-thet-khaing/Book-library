@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ptk.demo.dto.request.BookRequest;
+import com.ptk.demo.dto.response.BookResponse;
 import com.ptk.demo.model.Book;
 import com.ptk.demo.service.BookService;
 
@@ -23,14 +25,22 @@ public class BookController
 	@Autowired
     private BookService bookService;
 
-    @PostMapping
-    public Book addBook(@RequestBody Book book) {
-        return bookService.addBook(book);
-    }
+	@PostMapping
+	public ResponseEntity<BookResponse> addBook(@RequestBody BookRequest request) 
+	{
+	    BookResponse response = bookService.addBook(request);
+	    return ResponseEntity.ok(response);
+	}
 
-    @GetMapping("/{isbn}")
-    public Book getBook(@PathVariable String isbn) 
-    {
-        return bookService.getBookByIsbn(isbn); // Returns null if not found
-    }
+	@GetMapping("/{isbn}")
+	public ResponseEntity<BookResponse> getBook(@PathVariable String isbn) 
+	{
+	    BookResponse response = bookService.getBookByIsbn(isbn);
+
+	    if (response == null) {
+	        return ResponseEntity.notFound().build();
+	    }
+
+	    return ResponseEntity.ok(response);
+	}
 }

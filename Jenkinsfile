@@ -19,8 +19,11 @@ pipeline {
             }
         }
 
-        stage('JaCoCo Report') {
+        stage('Unit Test & JaCoCo Report') {
             steps {
+                sh 'mvn clean test jacoco:report'
+
+                // Publish JaCoCo HTML report
                 publishHTML([
                     allowMissing: true,
                     alwaysLinkToLastBuild: true,
@@ -34,7 +37,6 @@ pipeline {
 
         stage('Static Code Analysis (Checkstyle + SonarQube)') {
             steps {
-
                 sh 'mvn checkstyle:checkstyle'
 
                 publishHTML([
@@ -46,11 +48,12 @@ pipeline {
                     reportName: 'Checkstyle Report'
                 ])
 
+                // Run SonarQube analysis
                 withSonarQubeEnv('sonar') {
                     sh """
-                    mvn sonar:sonar \
-                    -Dsonar.projectKey=Book_Library \
-                    -Dsonar.projectName=Book_Library
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=Book_Library \
+                        -Dsonar.projectName=Book_Library
                     """
                 }
             }
@@ -80,6 +83,17 @@ pipeline {
                     docker rm ptk-book-library || true
                     docker run -d --name ptk-book-library -p ${DOCKER_HOST_PORT}:${DOCKER_CONTAINER_PORT} ${DOCKER_REPO}:${IMAGE_TAG}
                 """
+                // Give container a few seconds to start
+                sleep 5
+            }
+        }
+
+        stage('Acceptance Test (Cucumber)') {
+            steps {
+                // Run Cucumber acceptance tests against the running container
+                sh """
+                    mvn test -Dcucumber.options="classpath:features/book_library.feature"
+                """
             }
         }
     }
@@ -88,16 +102,23 @@ pipeline {
         success {
             emailext(
                 to: 'phyothetkhing2002@gmail.com',
-                subject: '✅ Build SUCCESS',
-                body: 'Build completed successfully.'
+                subject: '✅ Book Library Build SUCCESS',
+                body: 'Build, Docker, and acceptance tests completed successfully.'
             )
         }
         failure {
             emailext(
                 to: 'phyothetkhing2002@gmail.com',
-                subject: '❌ Build FAILED',
-                body: 'Build failed. Check logs.'
+                subject: '❌ Book Library Build FAILED',
+                body: 'Build failed. Check Jenkins logs and test reports.'
             )
+        }
+        always {
+            // Stop and remove Docker container to clean up
+            sh """
+                docker stop ptk-book-library || true
+                docker rm ptk-book-library || true
+            """
         }
     }
 }

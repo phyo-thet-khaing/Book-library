@@ -6,7 +6,5 @@ EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "Book-library.jar"] 
 #  Dockerfile
-<<<<<<< HEAD:DockerFile
-# DockerFile
-=======
->>>>>>> 0f9e652d59ede3c590732e0fb5e5e7b43382a018:Dockerfile
+
+
