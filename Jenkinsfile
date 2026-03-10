@@ -49,8 +49,8 @@ pipeline {
                 withSonarQubeEnv('sonar') {
                     sh """
                     mvn sonar:sonar \
-                    -Dsonar.projectKey=book-library \
-                    -Dsonar.projectName=book-library
+                    -Dsonar.projectKey=Book_Library \
+                    -Dsonar.projectName=Book_Library
                     """
                 }
             }
