@@ -9,7 +9,7 @@ import io.cucumber.spring.CucumberContextConfiguration;
 @CucumberContextConfiguration
 @SpringBootTest(classes = BookLibraryApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class CucumberBookConfiguration
+public class CucumberSpringConfiguration
 {
 
 }

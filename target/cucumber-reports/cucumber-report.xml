@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="Cucumber" time="5.98" tests="1" skipped="0" failures="0" errors="0">
-<testcase classname="Library" name="Store book in the library" time="0.009">
+<testsuite name="Cucumber" time="7.227" tests="1" skipped="0" failures="0" errors="0">
+<testcase classname="Library" name="Store book in the library" time="0.014">
 <system-out><![CDATA[
 Given Book "The Lord of the Rings" by "J.R.R. Tolkien" with ISBN number "0395974682".passed
 When I store the book in library............................................passed
