@@ -103,11 +103,33 @@ pipeline {
             }
         }
 
+        // stage('Acceptance Test') {
+        //     steps {
+        //         sh 'mvn test -Dcucumber.options="classpath:features/library.feature"'
+        //     }
+        // }
+
+
         stage('Acceptance Test') {
             steps {
-                sh 'mvn test -Dcucumber.options="classpath:features/library.feature"'
+                sh 'mvn verify -Pacceptance'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'target/cucumber-reports/*.xml'
+
+                    publishHTML(target: [
+                        allowMissing: true,
+                        keepAll: true,
+                        alwaysLinkToLastBuild: true,
+                        reportDir: 'target/cucumber-reports',
+                        reportFiles: 'cucumber-report.html',
+                        reportName: 'Acceptance Report'
+                    ])
+                }
             }
         }
+
     }
 
     post {
