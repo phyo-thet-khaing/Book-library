@@ -9,10 +9,6 @@ pipeline {
         DOCKER_REPO = 'ptk-book-library'
         DOCKER_HOST_PORT = '8086'
         DOCKER_CONTAINER_PORT = '8080'
-
-        MYSQL_ROOT_PASSWORD = 'root'
-        MYSQL_DATABASE = 'springdb'
-        MYSQL_CONTAINER_NAME = 'mysql-docker'
         DOCKER_NETWORK = 'library-network'
     }
 
@@ -92,22 +88,6 @@ pipeline {
             }
         }
 
-        stage('Run MySQL Container') {
-            steps {
-                sh """
-                docker stop ${MYSQL_CONTAINER_NAME} || true
-                docker rm ${MYSQL_CONTAINER_NAME} || true
-
-                docker run -d --name ${MYSQL_CONTAINER_NAME} \
-                --network ${DOCKER_NETWORK} \
-                -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
-                -e MYSQL_DATABASE=${MYSQL_DATABASE} \
-                -p 3306:3306 \
-                mysql:latest
-                """
-            }
-        }
-
         stage('Run Spring Boot Container') {
             steps {
                 sh """
@@ -117,9 +97,6 @@ pipeline {
                 docker run -d --name ${DOCKER_REPO} \
                 --network ${DOCKER_NETWORK} \
                 -p ${DOCKER_HOST_PORT}:${DOCKER_CONTAINER_PORT} \
-                -e SPRING_DATASOURCE_URL=jdbc:mysql://${MYSQL_CONTAINER_NAME}:3306/${MYSQL_DATABASE} \
-                -e SPRING_DATASOURCE_USERNAME=root \
-                -e SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD} \
                 ${DOCKER_REPO}:${IMAGE_TAG}
                 """
                 sleep 10
@@ -131,7 +108,6 @@ pipeline {
                 sh 'mvn test -Dcucumber.options="classpath:features/library.feature"'
             }
         }
-
     }
 
     post {
