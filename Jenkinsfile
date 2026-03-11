@@ -10,7 +10,6 @@ pipeline {
         DOCKER_HOST_PORT = '8086'
         DOCKER_CONTAINER_PORT = '8080'
 
-        // MySQL Config
         MYSQL_ROOT_PASSWORD = 'root'
         MYSQL_DATABASE = 'springdb'
         MYSQL_CONTAINER_NAME = 'mysql-docker'
@@ -25,8 +24,28 @@ pipeline {
             }
         }
 
-        stage('JaCoCo Report') {
+        stage('Build') {
             steps {
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+
+        stage('Code Quality Analysis (SonarQube)') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh """
+                    mvn sonar:sonar \
+                    -Dsonar.projectKey=Book_Library \
+                    -Dsonar.projectName=Book_Library
+                    """
+                }
+            }
+        }
+
+        stage('Code Coverage (JaCoCo)') {
+            steps {
+                sh 'mvn test'
+
                 publishHTML([
                     allowMissing: true,
                     alwaysLinkToLastBuild: true,
@@ -38,7 +57,7 @@ pipeline {
             }
         }
 
-        stage('Static Code Analysis (Checkstyle + SonarQube)') {
+        stage('Coding Standards (Checkstyle)') {
             steps {
                 sh 'mvn checkstyle:checkstyle'
 
@@ -50,20 +69,17 @@ pipeline {
                     reportFiles: 'checkstyle.html',
                     reportName: 'Checkstyle Report'
                 ])
-
-                withSonarQubeEnv('sonar') {
-                    sh """
-                    mvn sonar:sonar \
-                    -Dsonar.projectKey=Book_Library \
-                    -Dsonar.projectName=Book_Library
-                    """
-                }
             }
         }
 
-        stage('Build Jar') {
+        stage('Docker Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                script {
+                    def imageTag = "${env.BUILD_NUMBER}"
+                    sh "docker build -t ${DOCKER_REPO}:${imageTag} ."
+                    sh "docker tag ${DOCKER_REPO}:${imageTag} ${DOCKER_REPO}:latest"
+                    env.IMAGE_TAG = imageTag
+                }
             }
         }
 
@@ -81,24 +97,14 @@ pipeline {
                 sh """
                 docker stop ${MYSQL_CONTAINER_NAME} || true
                 docker rm ${MYSQL_CONTAINER_NAME} || true
-                docker run -d --name ${MYSQL_CONTAINER_NAME} \
-                    --network ${DOCKER_NETWORK} \
-                    -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
-                    -e MYSQL_DATABASE=${MYSQL_DATABASE} \
-                    -p 3306:3306 \
-                    mysql:latest
-                """
-            }
-        }
 
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    def imageTag = "${env.BUILD_NUMBER}"
-                    sh "docker build -t ${DOCKER_REPO}:${imageTag} ."
-                    sh "docker tag ${DOCKER_REPO}:${imageTag} ${DOCKER_REPO}:latest"
-                    env.IMAGE_TAG = imageTag
-                }
+                docker run -d --name ${MYSQL_CONTAINER_NAME} \
+                --network ${DOCKER_NETWORK} \
+                -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+                -e MYSQL_DATABASE=${MYSQL_DATABASE} \
+                -p 3306:3306 \
+                mysql:latest
+                """
             }
         }
 
@@ -107,15 +113,16 @@ pipeline {
                 sh """
                 docker stop ${DOCKER_REPO} || true
                 docker rm ${DOCKER_REPO} || true
+
                 docker run -d --name ${DOCKER_REPO} \
-                    --network ${DOCKER_NETWORK} \
-                    -p ${DOCKER_HOST_PORT}:${DOCKER_CONTAINER_PORT} \
-                    -e SPRING_DATASOURCE_URL=jdbc:mysql://${MYSQL_CONTAINER_NAME}:3306/${MYSQL_DATABASE} \
-                    -e SPRING_DATASOURCE_USERNAME=root \
-                    -e SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD} \
-                    ${DOCKER_REPO}:${IMAGE_TAG}
+                --network ${DOCKER_NETWORK} \
+                -p ${DOCKER_HOST_PORT}:${DOCKER_CONTAINER_PORT} \
+                -e SPRING_DATASOURCE_URL=jdbc:mysql://${MYSQL_CONTAINER_NAME}:3306/${MYSQL_DATABASE} \
+                -e SPRING_DATASOURCE_USERNAME=root \
+                -e SPRING_DATASOURCE_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+                ${DOCKER_REPO}:${IMAGE_TAG}
                 """
-                sleep 5
+                sleep 10
             }
         }
 
@@ -135,11 +142,12 @@ pipeline {
                 body: 'Build completed successfully.'
             )
         }
+
         failure {
             emailext(
                 to: 'phyothetkhing2002@gmail.com',
                 subject: '❌ Build FAILED',
-                body: 'Build failed. Check logs.'
+                body: 'Build failed. Check Jenkins logs.'
             )
         }
     }
