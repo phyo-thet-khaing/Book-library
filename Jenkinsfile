@@ -44,7 +44,7 @@ pipeline {
 
         stage('Code Coverage (JaCoCo)') {
             steps {
-                sh 'mvn test'
+                sh 'mvn jacoco:report'
 
                 publishHTML([
                     allowMissing: true,
