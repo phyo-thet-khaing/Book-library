@@ -9,4 +9,6 @@ public interface BookService {
 
 	BookResponse getBookByIsbn(String isbn);
 
+	BookResponse deleteBookByIsbn(String testIsbn);
+
 }

@@ -43,4 +43,17 @@ public class BookServiceImpl implements BookService
         return optionalBook.map(bookMapper::toResponse).orElse(null);
 	}
 
+	@Override
+	public BookResponse deleteBookByIsbn(String isbn) {
+	    // Find the book by ISBN
+	    Book book = bookRepository.findByIsbn(isbn)
+	            .orElseThrow(() -> new RuntimeException("Book not found with ISBN: " + isbn));
+
+	    // Delete the book
+	    bookRepository.delete(book);
+
+	    // Convert the deleted book to BookResponse using mapper
+	    return bookMapper.toResponse(book);
+	}
+
 }
