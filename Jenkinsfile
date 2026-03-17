@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timestamps()
+    }
+
     tools {
         maven "maven3.9"
     }
@@ -10,19 +16,38 @@ pipeline {
         DOCKER_HOST_PORT = '8086'
         DOCKER_CONTAINER_PORT = '8080'
         DOCKER_NETWORK = 'library-network'
+        IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/phyo-thet-khaing/Book-library.git'
+                git branch: 'main',
+                    url: 'https://github.com/phyo-thet-khaing/Book-library.git'
             }
         }
 
-        stage('Build') {
+        stage('Compile') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean compile'
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'mvn package -DskipTests'
             }
         }
 
@@ -32,7 +57,8 @@ pipeline {
                     sh """
                     mvn sonar:sonar \
                     -Dsonar.projectKey=Book_Library \
-                    -Dsonar.projectName=Book_Library
+                    -Dsonar.projectName=Book_Library \
+                    -Dsonar.host.url=$SONAR_HOST_URL
                     """
                 }
             }
@@ -41,7 +67,6 @@ pipeline {
         stage('Code Coverage (JaCoCo)') {
             steps {
                 sh 'mvn jacoco:report'
-
                 publishHTML([
                     allowMissing: true,
                     alwaysLinkToLastBuild: true,
@@ -56,7 +81,6 @@ pipeline {
         stage('Coding Standards (Checkstyle)') {
             steps {
                 sh 'mvn checkstyle:checkstyle'
-
                 publishHTML([
                     allowMissing: true,
                     alwaysLinkToLastBuild: true,
@@ -70,12 +94,10 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                script {
-                    def imageTag = "${env.BUILD_NUMBER}"
-                    sh "docker build -t ${DOCKER_REPO}:${imageTag} ."
-                    sh "docker tag ${DOCKER_REPO}:${imageTag} ${DOCKER_REPO}:latest"
-                    env.IMAGE_TAG = imageTag
-                }
+                sh """
+                docker build -t ${DOCKER_REPO}:${IMAGE_TAG} .
+                docker tag ${DOCKER_REPO}:${IMAGE_TAG} ${DOCKER_REPO}:latest
+                """
             }
         }
 
@@ -88,7 +110,7 @@ pipeline {
             }
         }
 
-        stage('Run Spring Boot Container') {
+        stage('Deploy Container') {
             steps {
                 sh """
                 docker stop ${DOCKER_REPO} || true
@@ -99,53 +121,42 @@ pipeline {
                 -p ${DOCKER_HOST_PORT}:${DOCKER_CONTAINER_PORT} \
                 ${DOCKER_REPO}:${IMAGE_TAG}
                 """
-                sleep 10
             }
         }
 
-            stage('Acceptance Test') {
-                steps {
-                    sh 'mvn test -Dcucumber.options="classpath:features/library.feature"'
-                }
+        stage('Wait For App') {
+            steps {
+                sh """
+                for i in {1..20}; do
+                    curl -s http://localhost:${DOCKER_HOST_PORT} && break
+                    echo "Waiting for app..."
+                    sleep 3
+                done
+                """
             }
+        }
 
-
-        // stage('Acceptance Test') {
-        //     steps {
-        //         sh 'mvn verify -Pacceptance'
-        //     }
-        //     post {
-        //         always {
-        //             junit allowEmptyResults: true, testResults: 'target/cucumber-reports/*.xml'
-
-        //             publishHTML(target: [
-        //                 allowMissing: true,
-        //                 keepAll: true,
-        //                 alwaysLinkToLastBuild: true,
-        //                 reportDir: 'target/cucumber-reports',
-        //                 reportFiles: 'cucumber-report.html',
-        //                 reportName: 'Acceptance Report'
-        //             ])
-        //         }
-        //     }
-        // }
-
+        stage('Acceptance Test') {
+            steps {
+                sh 'mvn test -Dcucumber.options="classpath:features/library.feature"'
+            }
+        }
     }
 
     post {
         success {
             emailext(
                 to: 'phyothetkhing2002@gmail.com',
-                subject: '✅ Build SUCCESS',
-                body: 'Build completed successfully.'
+                subject: "✅ Build SUCCESS #${BUILD_NUMBER}",
+                body: "Build completed successfully."
             )
         }
 
         failure {
             emailext(
                 to: 'phyothetkhing2002@gmail.com',
-                subject: '❌ Build FAILED',
-                body: 'Build failed. Check Jenkins logs.'
+                subject: "❌ Build FAILED #${BUILD_NUMBER}",
+                body: "Build failed. Check Jenkins logs."
             )
         }
     }
