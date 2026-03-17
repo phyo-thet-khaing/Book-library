@@ -16,6 +16,11 @@ pipeline {
         DOCKER_HOST_PORT = '8086'
         DOCKER_CONTAINER_PORT = '8080'
         DOCKER_NETWORK = 'library-network'
+        MYSQL_CONTAINER = 'mysql-docker'
+        MYSQL_PORT = '3306'
+        MYSQL_DB = 'springdb'
+        MYSQL_USER = 'root'
+        MYSQL_PASSWORD = 'root'
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
 
@@ -25,6 +30,41 @@ pipeline {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/phyo-thet-khaing/Book-library.git'
+            }
+        }
+
+        stage('Setup Docker Network') {
+            steps {
+                sh """
+                docker network inspect ${DOCKER_NETWORK} >/dev/null 2>&1 || \
+                docker network create ${DOCKER_NETWORK}
+                """
+            }
+        }
+
+        stage('Start Test Database') {
+            steps {
+                sh """
+                # Stop and remove existing MySQL container if any
+                docker stop ${MYSQL_CONTAINER} || true
+                docker rm ${MYSQL_CONTAINER} || true
+                
+                # Start MySQL container
+                docker run -d \
+                    --name ${MYSQL_CONTAINER} \
+                    --network ${DOCKER_NETWORK} \
+                    -e MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD} \
+                    -e MYSQL_DATABASE=${MYSQL_DB} \
+                    -p ${MYSQL_PORT}:3306 \
+                    mysql:8.0 \
+                    --default-authentication-plugin=mysql_native_password
+                
+                echo "Waiting for MySQL to be ready..."
+                sleep 30
+                
+                # Verify MySQL is running
+                docker ps | grep ${MYSQL_CONTAINER}
+                """
             }
         }
 
@@ -101,15 +141,6 @@ pipeline {
             }
         }
 
-        stage('Setup Docker Network') {
-            steps {
-                sh """
-                docker network inspect ${DOCKER_NETWORK} >/dev/null 2>&1 || \
-                docker network create ${DOCKER_NETWORK}
-                """
-            }
-        }
-
         stage('Deploy Container') {
             steps {
                 sh """
@@ -144,6 +175,14 @@ pipeline {
     }
 
     post {
+        always {
+            // Clean up test database
+            sh '''
+                docker stop mysql-docker || true
+                docker rm mysql-docker || true
+            '''
+        }
+        
         success {
             emailext(
                 to: 'phyothetkhing2002@gmail.com',
