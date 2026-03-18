@@ -149,7 +149,7 @@ stages {
 
     stage('Acceptance Test') {
         steps {
-            sh 'mvn verify -Pacceptance'
+            sh 'mvn verify'
         }
 
         post {
