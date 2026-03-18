@@ -128,7 +128,7 @@ stages {
                 docker run -d \
                     --name ${CONTAINER_NAME} \
                     --network ${DOCKER_NETWORK} \
-                    -p 8086:8080 \
+                    -p 8086:8081 \
                     ${IMAGE_NAME}:${VERSION}
             """
         }
