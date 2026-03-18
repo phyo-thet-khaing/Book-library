@@ -28,16 +28,16 @@ stages {
         }
     }
 
-    // stage('Unit Tests') {
-    //     steps {
-    //         sh 'mvn test'
-    //     }
-    //     post {
-    //         always {
-    //             junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-    //         }
-    //     }
-    // }
+    stage('Unit Tests') {
+        steps {
+            sh 'mvn test'
+        }
+        post {
+            always {
+                junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+            }
+        }
+    }
 
     stage('Code Quality') {
         parallel {

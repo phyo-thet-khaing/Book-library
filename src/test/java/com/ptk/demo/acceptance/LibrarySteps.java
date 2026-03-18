@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import com.ptk.demo.dto.request.BookRequest;
 import com.ptk.demo.dto.response.BookResponse;
@@ -14,7 +15,8 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-public class LibrarySteps {
+public class LibrarySteps 
+{
 
     @Autowired
     private BookService bookService;
@@ -24,7 +26,8 @@ public class LibrarySteps {
     
     // ✅ This runs before each scenario
     @Before
-    public void cleanUp() {
+    public void cleanUp() 
+    {
         // Example: remove a book with the test ISBN if it exists
         String testIsbn = "0395974682"; // or whatever ISBN you use in the scenario
         BookResponse existing = bookService.getBookByIsbn(testIsbn);
@@ -34,7 +37,8 @@ public class LibrarySteps {
     }
 
     @Given("Book {string} by {string} with ISBN number {string}")
-    public void createBook(String name, String author, String isbn) {
+    public void createBook(String name, String author, String isbn) 
+    {
 
         bookRequest = new BookRequest();
         bookRequest.setName(name);
@@ -44,14 +48,16 @@ public class LibrarySteps {
     }
 
     @When("I store the book in library")
-    public void storeBook() {
+    public void storeBook()
+    {
 
         bookService.addBook(bookRequest);
 
     }
 
     @Then("I am able to retrieve the book by the ISBN number")
-    public void retrieveBook() {
+    public void retrieveBook() 
+    {
 
         retrievedBook = bookService.getBookByIsbn(bookRequest.getIsbn());
 
