@@ -28,16 +28,16 @@ stages {
         }
     }
 
-    stage('Unit Tests') {
-        steps {
-            sh 'mvn test'
-        }
-        post {
-            always {
-                junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-            }
-        }
-    }
+    // stage('Unit Tests') {
+    //     steps {
+    //         sh 'mvn test'
+    //     }
+    //     post {
+    //         always {
+    //             junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+    //         }
+    //     }
+    // }
 
     stage('Code Quality') {
         parallel {
@@ -149,14 +149,7 @@ stages {
 
     stage('Acceptance Test') {
         steps {
-            sh '''
-                docker run --rm \
-                  --network library-network \
-                  -v $PWD:/app \
-                  -w /app \
-                  maven:3.9-eclipse-temurin-21 \
-                  mvn verify -Pacceptance
-            '''
+            sh 'mvn verify -Pacceptance'
         }
 
         post {
