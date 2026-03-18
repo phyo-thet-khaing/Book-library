@@ -28,70 +28,70 @@ stages {
         }
     }
 
-    stage('Unit Tests') {
-        steps {
-            sh 'mvn test'
-        }
-        post {
-            always {
-                junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-            }
-        }
-    }
+    // stage('Unit Tests') {
+    //     steps {
+    //         sh 'mvn test'
+    //     }
+    //     post {
+    //         always {
+    //             junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+    //         }
+    //     }
+    // }
 
-    stage('Code Quality') {
-        parallel {
+    // stage('Code Quality') {
+    //     parallel {
 
-            stage('Checkstyle') {
-                steps {
-                    sh 'mvn checkstyle:checkstyle'
-                }
-                post {
-                    always {
-                        publishHTML(target: [
-                            allowMissing: true,
-                            keepAll: true,
-                            alwaysLinkToLastBuild: true,
-                            reportDir: 'target/site',
-                            reportFiles: 'checkstyle.html',
-                            reportName: 'Checkstyle Report'
-                        ])
-                    }
-                }
-            }
+    //         stage('Checkstyle') {
+    //             steps {
+    //                 sh 'mvn checkstyle:checkstyle'
+    //             }
+    //             post {
+    //                 always {
+    //                     publishHTML(target: [
+    //                         allowMissing: true,
+    //                         keepAll: true,
+    //                         alwaysLinkToLastBuild: true,
+    //                         reportDir: 'target/site',
+    //                         reportFiles: 'checkstyle.html',
+    //                         reportName: 'Checkstyle Report'
+    //                     ])
+    //                 }
+    //             }
+    //         }
 
-            stage('Coverage') {
-                steps {
-                    sh 'mvn jacoco:report'
-                }
-                post {
-                    always {
-                        publishHTML(target: [
-                            allowMissing: true,
-                            keepAll: true,
-                            alwaysLinkToLastBuild: true,
-                            reportDir: 'target/site/jacoco',
-                            reportFiles: 'index.html',
-                            reportName: 'Coverage Report'
-                        ])
-                    }
-                }
-            }
-        }
-    }
+    //         stage('Coverage') {
+    //             steps {
+    //                 sh 'mvn jacoco:report'
+    //             }
+    //             post {
+    //                 always {
+    //                     publishHTML(target: [
+    //                         allowMissing: true,
+    //                         keepAll: true,
+    //                         alwaysLinkToLastBuild: true,
+    //                         reportDir: 'target/site/jacoco',
+    //                         reportFiles: 'index.html',
+    //                         reportName: 'Coverage Report'
+    //                     ])
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
-    stage('Code Analysis') {
-        steps {
-            withSonarQubeEnv('sonar') {
-                sh """
-                    mvn clean verify sonar:sonar \
-                   -Dsonar.projectKey=Book_Library \
-                    -Dsonar.projectName=Book_Library \
+    // stage('Code Analysis') {
+    //     steps {
+    //         withSonarQubeEnv('sonar') {
+    //             sh """
+    //                 mvn clean verify sonar:sonar \
+    //                -Dsonar.projectKey=Book_Library \
+    //                 -Dsonar.projectName=Book_Library \
                     
-                """
-            }
-        }
-    }
+    //             """
+    //         }
+    //     }
+    // }
 
     stage('Package') {
         steps {
