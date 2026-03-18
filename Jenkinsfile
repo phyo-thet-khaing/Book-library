@@ -147,26 +147,32 @@ stages {
         }
     }
 
+    // stage('Acceptance Test') {
+    //     steps {
+    //         sh 'mvn verify'
+    //     }
+
+    //     post {
+    //         always {
+    //             junit allowEmptyResults: true, testResults: '**/target/cucumber-reports/*.xml'
+
+    //             publishHTML(target: [
+    //                 allowMissing: true,
+    //                 keepAll: true,
+    //                 alwaysLinkToLastBuild: true,
+    //                 reportDir: 'target/cucumber-reports',
+    //                 reportFiles: 'cucumber-report.html',
+    //                 reportName: 'Acceptance Report'
+    //             ])
+    //         }
+    //     }
+    // }
+
     stage('Acceptance Test') {
-        steps {
-            sh 'mvn verify'
-        }
-
-        post {
-            always {
-                junit allowEmptyResults: true, testResults: '**/target/cucumber-reports/*.xml'
-
-                publishHTML(target: [
-                    allowMissing: true,
-                    keepAll: true,
-                    alwaysLinkToLastBuild: true,
-                    reportDir: 'target/cucumber-reports',
-                    reportFiles: 'cucumber-report.html',
-                    reportName: 'Acceptance Report'
-                ])
+            steps {
+                sh 'mvn test -Dcucumber.options="classpath:features/library.feature"'
             }
         }
-    }
 }
 
     post {
